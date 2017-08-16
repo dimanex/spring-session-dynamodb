@@ -1,4 +1,4 @@
-# spring-session-dynamodb
+# Spring Session DynamoDB
 An implementation of Spring Session extension based on AWS DynamoDB as a Session Repository
 
 # Disclaimer
