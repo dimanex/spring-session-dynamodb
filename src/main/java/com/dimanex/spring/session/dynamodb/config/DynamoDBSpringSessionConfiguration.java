@@ -17,16 +17,16 @@
 package com.dimanex.spring.session.dynamodb.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
+import org.springframework.context.annotation.Configuration;
 
 import lombok.Data;
 
 @Data
-@Component
+@Configuration
 @ConfigurationProperties(prefix = "spring.session.dynamodb")
 public class DynamoDBSpringSessionConfiguration {
 
-    private int maxInactiveIntervalInSeconds;
+    private Integer maxInactiveIntervalInSeconds;
 
     private String tableName;
 

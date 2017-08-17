@@ -16,7 +16,7 @@
  */
 package com.dimanex.spring.session.dynamodb.config.annotation;
 
-import com.dimanex.spring.session.dynamodb.config.DynamoDBHttpSessionRepositoryConfiguration;
+import com.dimanex.spring.session.dynamodb.config.DynamoDBSessionRepositoryConfiguration;
 
 import org.springframework.context.annotation.Import;
 
@@ -29,11 +29,11 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 @Documented
-@Import(DynamoDBHttpSessionRepositoryConfiguration.class)
+@Import(DynamoDBSessionRepositoryConfiguration.class)
 public @interface EnableDynamoDBHttpSession {
 
-    int maxInactiveIntervalInSeconds() default DynamoDBHttpSessionRepositoryConfiguration.MAX_INACTIVE_INTERVAL_IN_SECONDS;
+    int maxInactiveIntervalInSeconds() default DynamoDBSessionRepositoryConfiguration.MAX_INACTIVE_INTERVAL_IN_SECONDS;
 
-    String sesstionsTableName() default DynamoDBHttpSessionRepositoryConfiguration.SESSIONS_TABLE_NAME;
+    String sesstionsTableName() default DynamoDBSessionRepositoryConfiguration.SESSIONS_TABLE_NAME;
 
 }
