@@ -59,8 +59,10 @@ public class DynamoDBSessionRepositoryConfiguration extends SpringHttpSessionCon
         AnnotationAttributes attributes = AnnotationAttributes.fromMap(importMetadata.getAnnotationAttributes
                 (EnableDynamoDBHttpSession.class.getName()));
 
-        this.maxInactiveIntervalInSeconds = attributes.getNumber("maxInactiveIntervalInSeconds");
-        this.sessionsTableName = attributes.getString("sesstionsTableName");
+        if (attributes != null) {
+            this.maxInactiveIntervalInSeconds = attributes.getNumber("maxInactiveIntervalInSeconds");
+            this.sessionsTableName = attributes.getString("sesstionsTableName");
+        }
     }
 
     public void setMaxInactiveIntervalInSeconds(int maxInactiveIntervalInSeconds) {
