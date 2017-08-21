@@ -45,6 +45,7 @@ import lombok.extern.log4j.Log4j2;
 public class DynamoDBSessionRepository implements SessionRepository<DynamoDBSessionRepository.DynamoDBSession> {
 
     private static final String ITEM_SESSION_ID_ATTRIBUTE_NAME = "SessionID";
+    private static final String ITEM_SESSION_EXPIRATION_TIME_ATTRIBUTE_NAME = "SessionExpirationTime";
     private static final String ITEM_SESSION_DATA_ATTRIBUTE_NAME = "SessionData";
 
     private final DynamoDB dynamoDB;
@@ -186,6 +187,7 @@ public class DynamoDBSessionRepository implements SessionRepository<DynamoDBSess
         ObjectOutputStream oos = null;
         try {
             Item item = new Item().withPrimaryKey(ITEM_SESSION_ID_ATTRIBUTE_NAME, session.getId());
+            updateTimeToLive(item, session);
             ByteArrayOutputStream fos = new ByteArrayOutputStream();
             oos = new ObjectOutputStream(fos);
             oos.writeObject(session);
@@ -206,6 +208,14 @@ public class DynamoDBSessionRepository implements SessionRepository<DynamoDBSess
             return session;
         } finally {
             IOUtils.closeQuietly(ois, null);
+        }
+    }
+
+    private void updateTimeToLive(Item item, DynamoDBSession session) {
+        if (session.getMaxInactiveIntervalInSeconds() >= 0) {
+            final long ttlInSeconds = TimeUnit.MILLISECONDS.toSeconds(session.getLastAccessedTime()) +
+                    session.getMaxInactiveIntervalInSeconds();
+            item.withNumber(ITEM_SESSION_EXPIRATION_TIME_ATTRIBUTE_NAME, ttlInSeconds);
         }
     }
 
