@@ -22,6 +22,29 @@
         <aws.java.sdk.version>1.11.176</aws.java.sdk.version>
     </properties>
 
+	<build>
+		<extensions>
+ 			<extension>
+        		<groupId>org.springframework.build</groupId>
+        		<artifactId>aws-maven</artifactId>
+        		<version>5.0.0.RELEASE</version>
+        	</extension>
+		</extensions>
+	</build>
+
+	<distributionManagement>
+        <repository>
+        	<id>dimanex-maven-repository</id>
+        	<name>DiManEx Maven Repository</name>
+        	<url>s3://maven.dimanex.com/release</url>
+        </repository>
+        <snapshotRepository>
+        	<id>dimanex-maven-repository</id>
+        	<name>DiManEx Maven Repository</name>
+	        <url>s3://maven.dimanex.com/snapshot</url>
+        </snapshotRepository>
+	</distributionManagement>
+
     <dependencyManagement>
         <dependencies>
             <dependency>
