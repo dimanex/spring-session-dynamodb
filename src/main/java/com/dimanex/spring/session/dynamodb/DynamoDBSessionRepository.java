@@ -142,9 +142,9 @@ public class DynamoDBSessionRepository implements SessionRepository<DynamoDBSess
 
         @Override
         public boolean isExpired() {
-            long actualInterval = ZonedDateTime.now(ZoneId.systemDefault()).toInstant().toEpochMilli() - this
-                    .creationTime;
-            return this.maxInactiveInterval >= 0 && actualInterval > TimeUnit.SECONDS.toMillis(this
+            final long actualInactiveInterval = ZonedDateTime.now(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                    - this.lastAccessedTime;
+            return this.maxInactiveInterval >= 0 && actualInactiveInterval > TimeUnit.SECONDS.toMillis(this
                     .maxInactiveInterval);
         }
 
