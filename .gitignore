@@ -24,6 +24,7 @@ hs_err_pid*
 target
 
 # IntelliJ
+bin/*
 .idea
 *.iml
 /.project
