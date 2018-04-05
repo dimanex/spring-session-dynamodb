@@ -101,6 +101,8 @@ public class DynamoDBSessionRepository implements SessionRepository<DynamoDBSess
 
     public static class DynamoDBSession implements ExpiringSession, Serializable {
 
+        private static final long serialVersionUID = 6459851973327402721L;
+
         private final String id;
         private long creationTime;
         private long lastAccessedTime;
