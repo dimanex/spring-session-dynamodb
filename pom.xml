@@ -4,6 +4,62 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
+	<profiles>
+	
+  		<profile>
+    		<id>staging</id>
+    		<activation>
+      			<activeByDefault>true</activeByDefault>
+    		</activation>
+    		<repositories>
+        		<repository>
+            		<id>dimanex-maven-repository</id>
+            		<name>DiManEx Maven Development Repository</name>
+            		<url>s3://maven.dimanex.com/development/snapshot</url>
+        		</repository>
+    		</repositories>
+			<distributionManagement>
+       			<repository>
+       				<id>dimanex-maven-repository</id>
+       				<name>DiManEx Maven Development Repository</name>
+       				<url>s3://maven.dimanex.com/development/release</url>
+       			</repository>
+       			<snapshotRepository>
+       				<id>dimanex-maven-repository</id>
+       				<name>DiManEx Maven Development Repository</name>
+	       			<url>s3://maven.dimanex.com/development/snapshot</url>
+       			</snapshotRepository>
+			</distributionManagement>
+  		</profile>
+  		
+  		<profile>
+    		<id>production</id>
+    		<activation>
+      			<activeByDefault>false</activeByDefault>
+    		</activation>
+    		<repositories>
+        		<repository>
+            		<id>dimanex-maven-repository</id>
+            		<name>DiManEx Maven Repository</name>
+            		<url>s3://maven.dimanex.com/snapshot</url>
+        		</repository>
+    		</repositories>
+			<distributionManagement>
+       			<repository>
+       				<id>dimanex-maven-repository</id>
+       				<name>DiManEx Maven Repository</name>
+       				<url>s3://maven.dimanex.com/release</url>
+       			</repository>
+       			<snapshotRepository>
+       				<id>dimanex-maven-repository</id>
+       				<name>DiManEx Maven Repository</name>
+	       			<url>s3://maven.dimanex.com/snapshot</url>
+       			</snapshotRepository>
+			</distributionManagement>
+  		</profile>
+  		
+	</profiles>
+
     <groupId>com.dimanex</groupId>
     <artifactId>spring-session-dynamodb</artifactId>
     <version>0.0.1-SNAPSHOT</version>
@@ -21,19 +77,6 @@
         <!--<project.lombok.version>1.16.10</project.lombok.version>-->
         <aws.java.sdk.version>1.11.176</aws.java.sdk.version>
     </properties>
-
-	<distributionManagement>
-        <repository>
-        	<id>dimanex-maven-repository</id>
-        	<name>DiManEx Maven Repository</name>
-        	<url>s3://maven.dimanex.com/release</url>
-        </repository>
-        <snapshotRepository>
-        	<id>dimanex-maven-repository</id>
-        	<name>DiManEx Maven Repository</name>
-	        <url>s3://maven.dimanex.com/snapshot</url>
-        </snapshotRepository>
-	</distributionManagement>
 
     <dependencyManagement>
         <dependencies>
