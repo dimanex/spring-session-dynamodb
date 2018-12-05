@@ -16,13 +16,6 @@
  */
 package com.dimanex.spring.session.dynamodb;
 
-import com.amazonaws.services.dynamodbv2.document.DynamoDB;
-import com.amazonaws.services.dynamodbv2.document.Item;
-import com.amazonaws.util.IOUtils;
-
-import org.springframework.session.ExpiringSession;
-import org.springframework.session.SessionRepository;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -30,14 +23,22 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+
+import org.springframework.session.Session;
+import org.springframework.session.SessionRepository;
+
+import com.amazonaws.services.dynamodbv2.document.DynamoDB;
+import com.amazonaws.services.dynamodbv2.document.Item;
+import com.amazonaws.util.IOUtils;
 
 import lombok.extern.log4j.Log4j2;
 
@@ -71,83 +72,92 @@ public class DynamoDBSessionRepository implements SessionRepository<DynamoDBSess
             log.error(e);
         }
     }
-
+    
+    
     @Override
-    public DynamoDBSession getSession(String id) {
-        try {
-            Item sessionItem = this.dynamoDB.getTable(this.sessionsTableName).getItem(ITEM_SESSION_ID_ATTRIBUTE_NAME,
-                    id);
-            if (sessionItem == null) {
-                return null;
-            }
-            DynamoDBSession session = toSession(sessionItem);
-            if (session.isExpired()) {
-                log.info("Session: '{}' has expired. It will be deleted.", id);
-                delete(id);
-                return null;
-            }
-            session.setLastAccessedTime(ZonedDateTime.now(ZoneId.systemDefault()).toInstant().toEpochMilli());
-            return session;
-        } catch (IOException | ClassNotFoundException e) {
-            log.error(e);
-        }
-        return null;
-    }
+	public DynamoDBSession findById(String id) {
+    	try {
+             Item sessionItem = this.dynamoDB.getTable(this.sessionsTableName).getItem(ITEM_SESSION_ID_ATTRIBUTE_NAME,
+                     id);
+             if (sessionItem == null) {
+                 return null;
+             }
+             DynamoDBSession session = toSession(sessionItem);
+             if (session.isExpired()) {
+                 log.info("Session: '{}' has expired. It will be deleted.", id);
+                 deleteById(id);
+                 return null;
+             }
+             session.setLastAccessedTime(Instant.now());
+             return session;
+         } catch (IOException | ClassNotFoundException e) {
+             log.error(e);
+         }
+         return null;
+	}
 
-    @Override
-    public void delete(String id) {
-        this.dynamoDB.getTable(this.sessionsTableName).deleteItem(ITEM_SESSION_ID_ATTRIBUTE_NAME, id);
-    }
+	@Override
+	public void deleteById(String id) {
+		this.dynamoDB.getTable(this.sessionsTableName).deleteItem(ITEM_SESSION_ID_ATTRIBUTE_NAME, id);
+	}
 
-    public static class DynamoDBSession implements ExpiringSession, Serializable {
+
+    public static class DynamoDBSession implements Session, Serializable {
 
         private static final long serialVersionUID = 6459851973327402721L;
 
-        private final String id;
+        private String id;
         private long creationTime;
         private long lastAccessedTime;
-        private int maxInactiveInterval;
+        private long maxInactiveIntervalSeconds;
         private Map<String, Object> attributes;
+        private Date expireAt;
 
-        public DynamoDBSession(String id, int maxInactiveInterval) {
+       public DynamoDBSession(String id, long maxInactiveIntervalSeconds) {
             this.id = id;
-            this.creationTime = ZonedDateTime.now(ZoneId.systemDefault()).toInstant().toEpochMilli();
+            this.creationTime = System.currentTimeMillis();
             this.lastAccessedTime = this.creationTime;
-            this.maxInactiveInterval = maxInactiveInterval;
+            this.maxInactiveIntervalSeconds = maxInactiveIntervalSeconds;
             attributes = new HashMap<>();
         }
-
+       
         @Override
-        public long getCreationTime() {
-            return this.creationTime;
+		public String changeSessionId() {
+        	String changedId = UUID.randomUUID().toString();
+    		this.id = changedId;
+    		return changedId;
+		}
+
+		@Override
+        public Instant getCreationTime() {
+            return Instant.ofEpochMilli(this.creationTime);
         }
 
         @Override
-        public void setLastAccessedTime(long lastAccessedTime) {
-            this.lastAccessedTime = lastAccessedTime;
+        public void setLastAccessedTime(Instant lastAccessedTime) {
+            this.lastAccessedTime = lastAccessedTime.toEpochMilli();
+            this.expireAt = Date.from(lastAccessedTime.plus(Duration.ofSeconds(this.maxInactiveIntervalSeconds)));
         }
 
         @Override
-        public long getLastAccessedTime() {
-            return this.lastAccessedTime;
+        public Instant getLastAccessedTime() {
+            return Instant.ofEpochMilli(lastAccessedTime);
         }
 
         @Override
-        public void setMaxInactiveIntervalInSeconds(int interval) {
-            this.maxInactiveInterval = interval;
+        public void setMaxInactiveInterval(Duration interval) {
+            this.maxInactiveIntervalSeconds = interval.getSeconds();
         }
 
+     
         @Override
-        public int getMaxInactiveIntervalInSeconds() {
-            return this.maxInactiveInterval;
+        public Duration getMaxInactiveInterval() {
+            return Duration.ofSeconds(this.maxInactiveIntervalSeconds);
         }
 
         @Override
         public boolean isExpired() {
-            final long actualInactiveInterval = ZonedDateTime.now(ZoneId.systemDefault()).toInstant().toEpochMilli()
-                    - this.lastAccessedTime;
-            return this.maxInactiveInterval >= 0 && actualInactiveInterval > TimeUnit.SECONDS.toMillis(this
-                    .maxInactiveInterval);
+        	return this.maxInactiveIntervalSeconds >= 0 && new Date().after(this.expireAt);
         }
 
         @Override
@@ -155,18 +165,16 @@ public class DynamoDBSessionRepository implements SessionRepository<DynamoDBSess
             return this.id;
         }
 
-        @Override
+        @SuppressWarnings("unchecked")
+		@Override
         public <T> T getAttribute(String attributeName) {
             return (T) this.attributes.get(attributeName);
         }
 
         @Override
         public Set<String> getAttributeNames() {
-            Set<String> attrNames = new HashSet<>(this.attributes.size());
-            for (String key : this.attributes.keySet()) {
-                attrNames.add(key);
-            }
-            return attrNames;
+            return this.attributes.keySet().stream()
+            		.collect(Collectors.toSet());
         }
 
         @Override
@@ -214,11 +222,12 @@ public class DynamoDBSessionRepository implements SessionRepository<DynamoDBSess
     }
 
     private void updateTimeToLive(Item item, DynamoDBSession session) {
-        if (session.getMaxInactiveIntervalInSeconds() >= 0) {
-            final long ttlInSeconds = TimeUnit.MILLISECONDS.toSeconds(session.getLastAccessedTime()) +
-                    session.getMaxInactiveIntervalInSeconds();
+        if (session.getMaxInactiveInterval().getSeconds() >= 0) {
+            final long lastAccessTimeSeconds = 
+            		TimeUnit.MILLISECONDS.toSeconds(session.getLastAccessedTime().toEpochMilli());
+        	
+        	final long ttlInSeconds = lastAccessTimeSeconds + session.getMaxInactiveInterval().getSeconds();
             item.withNumber(ITEM_SESSION_EXPIRATION_TIME_ATTRIBUTE_NAME, ttlInSeconds);
         }
     }
-
 }
