@@ -45,9 +45,9 @@ import lombok.extern.log4j.Log4j2;
 @Log4j2
 public class DynamoDBSessionRepository implements SessionRepository<DynamoDBSessionRepository.DynamoDBSession> {
 
-    private static final String ITEM_SESSION_ID_ATTRIBUTE_NAME = "SessionID";
-    private static final String ITEM_SESSION_EXPIRATION_TIME_ATTRIBUTE_NAME = "SessionExpirationTime";
-    private static final String ITEM_SESSION_DATA_ATTRIBUTE_NAME = "SessionData";
+    private static final String ITEM_SESSION_ID_ATTRIBUTE_NAME = "id";
+    private static final String ITEM_SESSION_EXPIRATION_TIME_ATTRIBUTE_NAME = "expires";
+    private static final String ITEM_SESSION_DATA_ATTRIBUTE_NAME = "data";
 
     private final DynamoDB dynamoDB;
     private final int maxInactiveIntervalInSeconds;
