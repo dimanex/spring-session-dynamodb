@@ -63,7 +63,7 @@
     <groupId>com.dimanex</groupId>
     <artifactId>spring-session-dynamodb</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-
+    <packaging>jar</packaging>
     <name>Spring Session DynamoDB</name>
     <description>Spring Session DynamoDB</description>
 
