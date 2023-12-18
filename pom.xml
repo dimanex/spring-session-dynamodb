@@ -72,6 +72,7 @@
         <java.version>17</java.version>
         <spring-boot.version>3.2.0</spring-boot.version>
         <aws-java-sdk.version>1.11.176</aws-java-sdk.version>
+        <aws-maven.version>5.0.0.RELEASE</aws-maven.version>
     </properties>
 
     <dependencyManagement>
@@ -132,7 +133,7 @@
  			<extension>
         		<groupId>org.springframework.build</groupId>
         		<artifactId>aws-maven</artifactId>
-        		<version>5.0.0.RELEASE</version>
+        		<version>${aws-maven.version}</version>
         	</extension>
 		</extensions>
     
